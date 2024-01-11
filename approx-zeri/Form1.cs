@@ -12,6 +12,8 @@ namespace approx_zeri
 {
     public partial class Form1 : Form
     {
+        public double x1 = 1;
+        public double x2 = 4;
         public Form1()
         {
             InitializeComponent();
@@ -20,103 +22,198 @@ namespace approx_zeri
         {
             
         }
-        void plotfunzione(double x1, double x2, Funzione f)
+        private void Form1_Paint(object sender, PaintEventArgs e)
         {
-            
-            double ymax = f.Valoreinx(x1);
-            double ymin = f.Valoreinx(x1);
-            double ciuccia = x1;
-            double proporzionex = this.ClientSize.Width / (x2 - x1);
-            double proprozioney = (ymax - ymin) / this.ClientSize.Height;
-
-            for (int i = 1; i < this.ClientSize.Width; i++)
-            {
-                ciuccia += proporzionex;
-                if(f.Valoreinx(x1)>ymax)
-                {
-                    ymax=f.Valoreinx(x1);
-                }
-                if(f.Valoreinx(x1)<ymin)
-                {
-                    ymin=f.Valoreinx(x1);
-                }
-            }
-            
-
-            Graphics g = this.CreateGraphics();
-            SolidBrush pennelloCerchio = new SolidBrush(Color.Red);
-
-            for (int i=0; i < this.ClientSize.Width;i++)
-            {
-                g.FillEllipse(pennelloCerchio, i, this.ClientSize.Height - (int)Math.Round((ymax-f.Valoreinx(x1))/ proprozioney), 5, 5);
-                Console.WriteLine("({0},{1})", i, (int)Math.Round(f.Valoreinx(x1)));
-                x1 += proporzionex;
-            }
+            PlotFunzione();
         }
 
-        public void esperimento()
+        private void button1_Click(object sender, EventArgs e)
         {
-            double startX = -25;
-            double endX = 20;
-            
-
-            Graphics g = this.CreateGraphics();
-            SolidBrush pennelloCerchio = new SolidBrush(Color.Red);
-            SolidBrush pennelloCerchio2 = new SolidBrush(Color.Blue);
-            
-            // Trova il massimo e il minimo della tua funzione
-            double maxY = 1.76;
-            double minY = -1.76;
-
-            // Calcola i fattori di scala per x e y
-            double proporzionex = (endX - startX)/this.ClientSize.Width ;
-            double proporzioney = (maxY - minY) / this.ClientSize.Height;
-
-            // Stampa i punti sulla console
-            for (double x = startX; x <= endX; x += proporzionex)
-            {
-                double y = Math.Sin(x)+Math.Sin(0.5*x); // Sostituisci con la tua funzione
-
-                int screenx1 = (int)((x - startX) /proporzionex);
-                int screeny1 = (int)((y-minY) / proporzioney);
-                g.FillEllipse(pennelloCerchio2, screenx1, this.ClientSize.Height - screeny1, 5, 5);
-            }
+            this.Refresh();
+            PlotFunzione();
+            ApprossimazioneBisezione(x1,x2);
         }
+        private void button2_Click(object sender, EventArgs e)
+        {
+            this.Refresh();
+            PlotFunzione();
+            ApprossimazioneSecante(x1, x2);
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            this.Refresh();
+            PlotFunzione();
+            ApprossimazioneTangente(x1);
+        }
+
+        private void Form1_Resize(object sender, EventArgs e)
+        {
+            this.Refresh();
+            PlotFunzione();
+        }
+
 
         public static double funzione(double x)
         { return Math.Sin(x); }
-        public void approssimazionesec(double x1, double x2)
+        public double derivata(double x)
         {
-            double zero = funzione(x1);
-            double controllo = 0;
-            Graphics g = this.CreateGraphics();
-            Pen pennello = new Pen(Color.Blue);
+            return (funzione(x + 0.000000001) + funzione(x)) / 0.000000001;
+        }
 
-            if (funzione(x1) * funzione(x2) < 0)
+        public void MaxMin(ref double max, ref double min)
+        {
+            double passo = (x2 - x1) / this.ClientSize.Width;
+            for (double x = x1; x <= x2; x += passo)
             {
-                while (zero != controllo)
+                if (funzione(x) > max)
                 {
-                    controllo = zero;
-                    zero = x2 - (funzione(x2) * (x2 - x1)) / (funzione(x2) - funzione(x1));
-                    g.DrawLine(pennello, 10, 10, 10, 10);
-
-
-                    if (funzione(x1) * funzione(zero) > 0)
-                    {
-                        x1 = zero;
-                    }
-                    else
-                        x2 = zero;
+                    max = funzione(x);
+                }
+                if (funzione(x) < min)
+                {
+                    min = funzione(x);
                 }
             }
         }
-
-        private void Form1_Paint(object sender, PaintEventArgs e)
+        public void Proporzionecoord(double x,  double y, ref double FormX, ref double FormY)
         {
-            Funzione funzione = new Funzione();
-            funzione.FunzioneStr = "x+1";
-            //plotfunzione(-5, 30, funzione);
-            esperimento();
+            double maxY = 0;
+            double minY = 0;
+            MaxMin(ref maxY, ref minY);
+
+            double proporzionex = (x2 - x1) / this.ClientSize.Width;
+            double proporzioney = (maxY - minY) / this.ClientSize.Height;
+
+            FormX = (x - x1) / proporzionex;
+            FormY = (y - minY) / proporzioney;
         }
+        public void PlotFunzione()
+        {         
+            Graphics g = this.CreateGraphics();
+            SolidBrush pennelloCerchio2 = new SolidBrush(Color.Blue);
+            Pen lineazero = new Pen(Color.Black);
+            if((x1*x2)>0)
+            g.DrawLine(lineazero, 0, this.ClientSize.Height / 2, this.ClientSize.Width, this.ClientSize.Height / 2);
+
+            
+            double maxY = 0;
+            double minY = 0;
+            MaxMin(ref maxY, ref minY);
+
+            
+            double proporzionex = (x2 - x1)/this.ClientSize.Width ;
+            double proporzioney = (maxY - minY) / this.ClientSize.Height;
+
+            
+            for (double x = x1; x <= x2; x += proporzionex)
+            {
+                double y = funzione(x); 
+
+                int formx = (int)((x - x1) / proporzionex);
+                int formy = (int)((y - minY) / proporzioney);
+                g.FillEllipse(pennelloCerchio2, formx, this.ClientSize.Height - formy, 3, 3);
+            }
+        }   
+        public void ApprossimazioneSecante(double x1, double x2)
+        {
+            Graphics g = this.CreateGraphics();
+            Pen pennello = new Pen(Color.Red,3);
+
+            int iterazione = 0;
+            double zero = funzione(x1);
+            double controllo = 0;
+            double FormX1 = 0;
+            double FormY1 = 0;
+            double FormX2 = 0;
+            double FormY2 = 0;
+
+            if (funzione(x1) * funzione(x2) < 0)
+            {
+                while ((zero != controllo) || iterazione < 5)
+                {
+                    controllo = zero;
+                    zero = x2 - (funzione(x2) * (x2 - x1)) / (funzione(x2) - funzione(x1));
+                    
+                    Proporzionecoord(x1, funzione(x1), ref FormX1, ref FormY1);
+                    Proporzionecoord(x2, funzione(x2), ref FormX2, ref FormY2);
+                    g.DrawLine(pennello, (int)FormX1, (int)(this.ClientSize.Height-FormY1), (int)FormX2, (int)(this.ClientSize.Height-FormY2));
+
+
+                    if (funzione(x1) * funzione(zero) > 0)
+                        x1 = zero;
+                    else
+                        x2 = zero;
+                    iterazione++;
+                }
+                Risultato.Text = string.Format("zero f(x)={0}", zero);
+            }
+        }
+        public void ApprossimazioneBisezione(double x1, double x2)
+        {
+            Graphics g = this.CreateGraphics();
+            Pen pennello = new Pen(Color.Red,3);
+
+            int iterazione = 0;
+            double zero = funzione(x1);
+            double controllo = 0;
+            double FormX2 = 0;
+            double FormY2 = 0;
+
+            if (funzione(x1) * funzione(x2) < 0)
+            {
+                while ((zero != controllo) || iterazione < 25)
+                {
+                    controllo = zero;
+                    zero = (x1 + x2) / 2;
+                    Proporzionecoord(zero, funzione(x2), ref FormX2, ref FormY2);
+                    g.DrawLine(pennello, (int)Math.Round(FormX2), (int)(this.ClientSize.Height), (int)Math.Round(FormX2), (int)0);
+
+                    if (funzione(zero) * funzione(x1) < 0)
+                    {
+                        x2 = zero;
+                    }
+                    else
+                    {
+                        x1 = zero;
+                    }
+                    Console.WriteLine(zero);
+                    iterazione++;
+
+                }
+                Risultato.Text = string.Format("zero f(x)={0}", zero);
+            }
+        }
+        public void ApprossimazioneTangente(double x1)
+        {
+            Graphics g = this.CreateGraphics();
+            Pen pennello = new Pen(Color.Red, 3);
+            double zero = x1;
+            int iterazione = 0;
+            double FormX1 = 0;
+            double FormY1 = 0;
+            double FormX2 = 0;
+            double FormY2 = 0;
+            if (funzione(x1) * funzione(x2) < 0 || iterazione > 5)
+            {
+                while ((zero != x1) || iterazione < 15)
+                {
+                    x1 = zero;
+                    zero = zero - funzione(zero) / derivata(zero);
+
+
+                    Proporzionecoord(zero, funzione(zero), ref FormX1, ref FormY1);
+                    Proporzionecoord(x2, derivata(x2) * (x2) + funzione(x2) / (derivata(x2) * (x2)), ref FormX2, ref FormY2);
+                    g.DrawLine(pennello, (int)FormX1, (int)(this.ClientSize.Height - FormY1), (int)FormX2, (int)(this.ClientSize.Height - FormY2));
+
+                    Console.WriteLine(zero);
+
+                    iterazione++;
+                }
+                Risultato.Text = string.Format("zero f(x)={0}", zero);
+            }
+        }
+
+        
     }
 }

@@ -15,7 +15,6 @@ namespace approx_zeri
         public double Valoreinx(double x)
         {
             string funcConVal = this.FunzioneStr.Replace("x", x.ToString(CultureInfo.InvariantCulture));
-            //var result = Convert.ToDouble(new DataTable().Compute(funcConVal, null));
             var result =new DataTable().Compute(funcConVal, null);
             return Convert.ToDouble(result);
         }
